@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+{% load static %}
+<html>
+    <head>
+        {% block head %}
+
+            <title>{% block title %}jwter{% endblock %}</title>
+
+            {% block meta %}
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            {% endblock %}
+
+            {% block css %}
+                {% bootstrap_css %}
+                <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/redmond/jquery-ui.min.css"/>
+            {% endblock %}
+
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}
+            <div class="container">
+                {% block content %}
+                {% endblock %}
+            </div>
+        {% endblock %}
+
+        {% block js %}
+            <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+            <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+            {% bootstrap_javascript %}
+        {% endblock %}
+    </body>
+</html>

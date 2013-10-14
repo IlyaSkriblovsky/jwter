@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load bootstrap3 %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="//api-maps.yandex.ru/2.0/?load=package.standard,package.geoObjects,package.editor&coordorder=longlat&lang=ru-RU" type="text/javascript"></script>
+
+    <script src="{% static 'area/edit.js' %}"></script>
+{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'area/edit.css' %}"/>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h3>Управление участками</h3>
+    </div>
+
+    <div>
+        <a href="{% url area-list %}" class="list-link">← Список участков</a>
+    </div>
+    <div class="clearfix"></div>
+
+    <form method="POST" class="form form-horizontal area-form" role="form">
+        {% csrf_token %}
+        {% bootstrap_form form layout='horizontal' exclude='address' label_class='col-md-2 col-lg-2' field_class='col-md-8 col-lg-7' %}
+
+        <div class="form-group{% if form.address.errors %} has-error{% endif %}">
+            <label class="col-md-2 col-lg-2 control-label">Адрес</label>
+            <div class="col-md-8 col-lg-7">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Адрес" name="address" id="id_address" value="{{ form.address.value|default_if_none:"" }}"/>
+                    <div class="input-group-btn">
+                        <button class="btn btn-default search-button"><i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            {% for error in form.address.errors %}
+                <span class="help-block">{{ error }}</span>
+            {% endfor %}
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label">Карта</label>
+            <div class="col-md-8 col-lg-7">
+                <div class="ymap form-control"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label">Инструменты</label>
+            <div class="col-md-8 col-lg-7">
+                <p>
+                    <button class="btn polygon">Многоугольник</button>
+                    <button class="btn polygon-edit">Режим редактирования</button>
+                </p>
+                <p>
+                    <button class="btn circle">Окружность</button>
+                    Радиус: <span class="radius-slider"></span>
+                </p>
+                <p>
+                    <button class="btn clear">Удалить все пометки</button>
+                </p>
+            </div>
+        </div>
+
+        <hr/>
+
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label"></label>
+            <div class="col-md-8 col-lg-7">
+                <input type="submit" class="btn btn-primary" value="Сохранить"/>
+                <input type="submit" class="btn btn-info" name="apply" value="Применить"/>
+                <a href="{% url area-list %}" class="btn btn-default">Отмена</a>
+                {% if area.id %}
+                    <a target="_blank" href="{% url area-print pk=area.id %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
+                {% endif %}
+                {% if area.id %}
+                    <div class="pull-right">
+                        <form method="POST" action="{% url area-delete area.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger">Удалить участок</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+{% endblock %}
