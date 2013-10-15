@@ -1,5 +1,13 @@
 {% extends 'base.html' %}
 
+{% load static %}
+{% load paginator %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'area/list.css' %}"/>
+{% endblock %}
+
 {% block content %}
     <div class="page-header">
         <h3>Управление участками</h3>
@@ -10,12 +18,16 @@
         <a href="{% url area-new %}" class="btn btn-primary">Новый участок</a>
     </div>
 
-    <table class="table">
+    {% comment %}
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#">Новые</a></li>
+        <li><a href="#">Архив</a></li>
+    </ul>
+    {% endcomment %}
+
+    <table class="table areas-list">
         <thead>
-            <tr>
-                <th style="width: 100px">Номер</th>
-                <th>Адрес</th>
-            </tr>
+            {% include 'areas/smart_list_header.html' %}
         </thead>
 
         <tbody>
@@ -27,8 +39,22 @@
                         {{ area.address }}
                     </a>
                 </td>
+
+                {% comment %}
+                <td>
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Перенести</a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li class="disabled"><a href="#">Новые</a></li>
+                            <li><a href="#">Архив</a></li>
+                        </ul>
+                    </div>
+                </td>
+                {% endcomment %}
             </tr>
         {% endfor %}
         </tbody>
     </table>
+
+    {% paginator %}
 {% endblock %}

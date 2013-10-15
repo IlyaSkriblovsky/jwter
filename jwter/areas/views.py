@@ -13,6 +13,7 @@ from jwter.utils import render_to
 from jwter.areas.models import Area
 from jwter.areas.forms  import AreaForm
 from jwter.areas.printer import print_one_area, print_many_areas
+from jwter.areas.mixins import SmartListMixin
 
 
 # @render_to('areas/list.html')
@@ -22,9 +23,13 @@ from jwter.areas.printer import print_one_area, print_many_areas
 #     }
 
 
-class AreaList(ListView):
-    model = Area
+class AreaList(SmartListMixin, ListView):
     template_name = 'areas/list.html'
+
+    model = Area
+    list_fields = ('number', 'address')
+
+    paginate_by = 15
 
 
 class AreaEdit(UpdateView):

@@ -1,0 +1,22 @@
+<tr>
+    {% for field in list_fields %}
+        <th>
+            <form>
+                <a href="{{ field.order_link }}">{{ field.verbose_name }}</a>
+                {% if field.order == 'asc' %}
+                    <i class="glyphicon glyphicon-arrow-down"></i>
+                {% elif field.order == 'dsc' %}
+                    <i class="glyphicon glyphicon-arrow-up"></i>
+                {% endif %}
+                <br/>
+                <div class="input-group">
+                    <input type="text" name="f_{{ field.name }}" class="form-control input-sm" value="{{ field.filter }}"/>
+                    <!-- <button class="btn btn-mini"><i class="icon-search"></i></button> -->
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-xs"><i class="glyphicon glyphicon-search"></i></button>
+                    </span>
+                </div>
+            </form>
+        </th>
+    {% endfor %}
+</tr>
