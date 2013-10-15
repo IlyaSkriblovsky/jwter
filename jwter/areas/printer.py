@@ -21,6 +21,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PIL import Image
 
 
+from jwter.areas.models import MapCache
+
+
 
 class PrintException(Exception): pass
 
@@ -92,17 +95,22 @@ def get_map(area):
     )
     url = ''.join(('http://', url_domain, url_path))
 
-    http = httplib.HTTPConnection(url_domain)
-    http.request('GET', url_path)
-    png = http.getresponse().read()
 
+    png = MapCache.get_map(url)
+    if png:
+        save_to_cache = False
+    else:
+        http = httplib.HTTPConnection(url_domain)
+        http.request('GET', url_path)
+        png = http.getresponse().read()
+        http.close()
+        save_to_cache = True
 
-    sio = StringIO.StringIO()
-    sio.write(png)
-    sio.seek(0)
 
     try:
-        image = Image.open(sio).convert('RGB')
+        image = Image.open(StringIO.StringIO(png)).convert('RGB')
+        if save_to_cache:
+            MapCache.save_map(url, png)
     except IOError as e:
         raise MapFetchingException("Can't parse map image: {0} {1}".format(e.message, url))
 
