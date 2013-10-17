@@ -62,7 +62,7 @@
                     </a>
                 </td>
 
-                <td class="area-inline-actions">
+                <td class="area-inline-actions text-right">
                     <form method="POST" action="{% url area-move area.id %}" class="move-form">
                         {% csrf_token %}
                         <input type="hidden" name="to" value=""/>
