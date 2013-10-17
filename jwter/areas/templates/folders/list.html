@@ -21,13 +21,15 @@
         <a href="{% url index %}" class="list-link">← Участки</a>
     </div>
 
-    <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
-        {% csrf_token %}
-        <input type="hidden" name="name" />
-        <button class="btn btn-primary new-folder">Новая папка</button>
-    </form>
+    <div>
+        <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
+            {% csrf_token %}
+            <input type="hidden" name="name" />
+            <button class="btn btn-primary new-folder">Новая папка</button>
+        </form>
 
-    <h3>Папки</h3>
+        <h3>Папки</h3>
+    </div>
 
     <div class="clearfix"></div>
 
