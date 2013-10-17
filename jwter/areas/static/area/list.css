@@ -1,8 +1,14 @@
-.areas-list th .input-group {
-    width: 200px;
-}
-.areas-list th:first-child .input-group {
-    width: 100px;
-}
+.areas-list th:first-child { width: 130px; }
+.areas-list th:first-child .input-group { width: 100px; }
+.areas-list th .input-group { width: 200px; }
+
 
 .areas-list th .input-sm { height: 22px; font-size: 11px; }
+
+.folder-actions { padding: 20px 0; }
+
+.move-form, .move-all-form { display: inline-block; }
+
+.area-inline-actions a {
+    color: #777;
+}

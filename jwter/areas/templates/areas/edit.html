@@ -16,13 +16,19 @@
 {% endblock %}
 
 {% block content %}
-    <div class="page-header">
-        <h3>Управление участками</h3>
-    </div>
+    {% if area.id %}
+        <div class="pull-right">
+            <form method="POST" action="{% url area-delete area.id %}">
+                {% csrf_token %}
+                <button class="btn btn-danger">Удалить участок</button>
+            </form>
+        </div>
+    {% endif %}
 
     <div>
-        <a href="{% url area-list %}" class="list-link">← Список участков</a>
+        <a href="{% url folder folder.id %}" class="list-link">← {{ folder.name }}</a>
     </div>
+
     <div class="clearfix"></div>
 
     <form method="POST" class="form form-horizontal area-form" role="form">
@@ -76,17 +82,9 @@
             <div class="col-md-8 col-lg-7">
                 <input type="submit" class="btn btn-primary" value="Сохранить"/>
                 <input type="submit" class="btn btn-info" name="apply" value="Применить"/>
-                <a href="{% url area-list %}" class="btn btn-default">Отмена</a>
+                <a href="{% url folder folder.id %}" class="btn btn-default">Отмена</a>
                 {% if area.id %}
                     <a target="_blank" href="{% url area-print pk=area.id %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
-                {% endif %}
-                {% if area.id %}
-                    <div class="pull-right">
-                        <form method="POST" action="{% url area-delete area.id %}">
-                            {% csrf_token %}
-                            <button class="btn btn-danger">Удалить участок</button>
-                        </form>
-                    </div>
                 {% endif %}
             </div>
         </div>

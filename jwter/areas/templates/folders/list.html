@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load paginator %}
+
+{% block js %}
+    {{ block.super }}
+    <script>
+        URL = {
+            folder_rename: function (folder_id) {
+                return '{% url folder-rename 12345 %}'.replace('12345', folder_id)
+            }
+        }
+        csrftoken = '{{ csrf_token }}'
+    </script>
+    <script src="{% static 'folders/list.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div>
+        <a href="{% url index %}" class="list-link">← Участки</a>
+    </div>
+
+    <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
+        {% csrf_token %}
+        <input type="hidden" name="name" />
+        <button class="btn btn-primary new-folder">Новая папка</button>
+    </form>
+
+    <h3>Папки</h3>
+
+    <div class="clearfix"></div>
+
+    <table class="table folders-list">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in folder_list %}
+                <tr>
+                    <td>
+                        {% if f.is_inbox or f.is_archive %}
+                            {{ f.name }}
+                        {% else %}
+                            <a href="#" class="folders-list-link" folder-id="{{ f.id }}">{{ f.name }}</a>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if not f.is_inbox and not f.is_archive %}
+                            <form method="POST" action="{% url folder-delete f.id %}">
+                                {% csrf_token %}
+                                <button class="btn btn-danger btn-xs">Удалить</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -84,14 +84,16 @@ def get_map(area):
 
     marks_style = 'c:000000ff,f:00000010,w:3'
 
+    polyline_arg = '~'.join('{0},{1}'.format(marks_style, enc) for enc in polygons_enc + circles_enc)
+
     url_domain = 'static-maps.yandex.ru'
-    url_path = '/1.x/?l=map&ll={x},{y}&z={z}&size={w},{h}&pl={pl}'.format(
+    url_path = '/1.x/?l=map&ll={x},{y}&z={z}&size={w},{h}{pl}'.format(
         x = area.x,
         y = area.y,
         z = area.zoom,
         w = 650,
         h = 284,
-        pl = '~'.join('{0},{1}'.format(marks_style, enc) for enc in polygons_enc + circles_enc)
+        pl = '&pl=' + polyline_arg if polyline_arg else ''
     )
     url = ''.join(('http://', url_domain, url_path))
 
