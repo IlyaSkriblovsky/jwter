@@ -205,7 +205,16 @@ $(function () {
                         parts.push('Circle|' + strings.join('|'))
                         break
                     case 'Polygon':
-                        parts.push('Polygon|' + ymaps.geometry.Polygon.toEncodedCoordinates(geo))
+                        var coords = geo.getCoordinates()
+                        for (var i = coords.length - 1; i >= 0; i--)
+                        {
+                            if (coords[i].length < 4) // Minimum vertex number is 4: triangle + 1 for duplicating first and last vertices as YMaps do
+                            {
+                                geo.splice(i, 1)
+                            }
+                        }
+                        if (geo.getCoordinates().length > 0)
+                            parts.push('Polygon|' + ymaps.geometry.Polygon.toEncodedCoordinates(geo))
                         break
                 }
             })
@@ -213,4 +222,13 @@ $(function () {
             $(this).find('[name="marks"]').val(parts.join(','))
         })
     })
+})
+
+
+
+$(document).on('click', '.restore-menu-item', function () {
+    var form = $(this).closest('form')
+    form.find('[name="restore_to"]').val($(this).attr('folder-id'))
+    form.submit()
+    return false
 })
