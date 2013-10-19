@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView
 from django.views.generic.edit import CreateView
@@ -6,12 +8,14 @@ from django.views.generic.base import View
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse
+from django.db import IntegrityError
+from django.contrib import messages
 
 
 from jwter.utils import render_to
 
-from jwter.areas.models import Area, Folder
-from jwter.areas.forms  import AreaForm
+from jwter.areas.models import Area, Folder, ArchivedArea
+from jwter.areas.forms  import AreaForm, ArchivedAreaForm
 from jwter.areas.printer import print_one_area, print_many_areas
 from jwter.areas.mixins import SmartListMixin
 
@@ -52,6 +56,21 @@ class FolderView(SmartListMixin, ListView):
         return context
 
 
+class Archive(SmartListMixin, ListView):
+    template_name = 'areas/archive.html'
+
+    model = ArchivedArea
+    list_fields = ('number', 'address')
+    paginate_by = 15
+
+    def get_context_data(self, **kwargs):
+        context = super(Archive, self).get_context_data(**kwargs)
+        context['archive'] = True
+        context['all_folders'] = Folder.objects.all()
+        return context
+
+
+
 class AreaList(SmartListMixin, ListView):
     template_name = 'areas/list.html'
 
@@ -63,6 +82,8 @@ class AreaList(SmartListMixin, ListView):
 
 class AreaEdit(UpdateView):
     model = Area
+    slug_field = 'number'
+    slug_url_kwarg = 'number'
     form_class = AreaForm
     template_name = 'areas/edit.html'
 
@@ -71,11 +92,36 @@ class AreaEdit(UpdateView):
         context['folder'] = self.get_object().folder
         return context
 
+    def post(self, request, *args, **kwargs):
+        # print '!!!', self.get_object().number
+        return super(AreaEdit, self).post(request, *args, **kwargs)
+
+    def get_success_url(self):
+        if 'apply' in self.request.REQUEST:
+            return self.object.get_absolute_url()
+        else:
+            return self.object.folder.get_absolute_url()
+
+
+class ArchivedAreaEdit(UpdateView):
+    model = ArchivedArea
+    form_class = ArchivedAreaForm
+    template_name = 'areas/edit.html'
+    context_object_name = 'area'
+
+    def get_context_data(self, **kwargs):
+        context = super(ArchivedAreaEdit, self).get_context_data(**kwargs)
+        context['archived'] = True
+        context['all_folders'] = Folder.objects.all()
+        return context
+
     def get_success_url(self):
         if 'apply' in self.request.REQUEST:
             return self.get_object().get_absolute_url()
         else:
-            return self.get_object().folder.get_absolute_url()
+            return reverse('archive')
+
+
 
 
 class AreaNew(CreateView):
@@ -103,23 +149,39 @@ class AreaNew(CreateView):
             return self.object.folder.get_absolute_url()
 
 
-class AreaDelete(SingleObjectMixin, View):
-    model = Area
-
-    def post(self, request, *args, **kwargs):
-        folder = self.get_object().folder
-        self.get_object().delete()
-        return redirect(folder)
+# class AreaDelete(SingleObjectMixin, View):
+#     model = Area
+#     slug_field = 'number'
+#     slug_url_kwarg = 'number'
+# 
+#     def post(self, request, *args, **kwargs):
+#         folder = self.get_object().folder
+#         self.get_object().delete()
+#         return redirect(folder)
 
 
 
 class AreaPrint(SingleObjectMixin, View):
     model = Area
+    slug_field = 'number'
+    slug_url_kwarg = 'number'
 
     def get(self, request, *args, **kwargs):
         # pdf = print_one_area(self.get_object())
         pdf = print_many_areas([ self.get_object() ])
         return HttpResponse(pdf, 'application/pdf')
+
+
+class AreaArchive(SingleObjectMixin, View):
+    model = Area
+    slug_field = 'number'
+    slug_url_kwarg = 'number'
+
+    def post(self, request, *args, **kwargs):
+        area = self.get_object()
+        folder = area.folder
+        area.archive()
+        return redirect(folder)
 
 
 # class PrintAllAreas(View):
@@ -142,6 +204,13 @@ class FolderList(ListView):
 
     model = Folder
 
+    def get_context_data(self, **kwargs):
+        context = super(FolderList, self).get_context_data(**kwargs)
+        context['all_folders'] = Folder.objects.all()
+        context['folder_settings'] = True
+        return context
+
+
 class FolderRename(SingleObjectMixin, View):
     model = Folder
 
@@ -161,7 +230,8 @@ class FolderDelete(SingleObjectMixin, View):
 
     def post(self, request, *args, **kwargs):
         f = self.get_object()
-        f.area_set.update(folder = Folder.get_archive())
+        for area in f.area_set.all():
+            area.archive()
         f.delete()
         return redirect('folders')
 
@@ -180,6 +250,8 @@ class MoveAll(View):
 
 class Move(SingleObjectMixin, View):
     model = Area
+    slug_field = 'number'
+    slug_url_kwarg = 'number'
 
     def post(self, request, *args, **kwargs):
         area = self.get_object()
@@ -187,3 +259,18 @@ class Move(SingleObjectMixin, View):
         area.save()
 
         return redirect(get_object_or_404(Folder, pk = int(request.REQUEST['back_to'])))
+
+
+
+class ArchiveRestore(SingleObjectMixin, View):
+    model = ArchivedArea
+
+    def post(self, request, *args, **kwargs):
+        aarea = self.get_object()
+
+        try:
+            aarea.restore_to(get_object_or_404(Folder, pk = int(request.REQUEST['to'])))
+        except IntegrityError:
+            messages.error(self.request, u'Участок с таким номером уже существует')
+
+        return redirect('archive')

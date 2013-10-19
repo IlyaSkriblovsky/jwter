@@ -14,17 +14,7 @@
 {% endblock %}
 
 {% block content %}
-        <ul class="nav nav-tabs">
-            {% for f in all_folders %}
-                <li {% if f == folder %}class="active"{% endif %}>
-                    <a href="{% url folder f.id %}">{{ f.name }}</a>
-                </li>
-            {% endfor %}
-
-            <li class="navbar-right">
-                <a href="{% url folders %}"><i class="glyphicon glyphicon-cog"></i></a>
-            </li>
-        </ul>
+    {% include 'folders/folders_tabs.html' %}
 
     <div class="folder-actions pull-right">
         <form method="POST" action="{% url area-move-all %}" class="form form-inline move-all-form" style="display: inline">
@@ -47,42 +37,7 @@
     </div>
     <div class="clearfix"></div>
 
-    <table class="table table-hover areas-list">
-        <thead>
-            {% include 'areas/smart_list_header.html' %}
-        </thead>
-
-        <tbody>
-        {% for area in area_list %}
-            <tr>
-                <td>{{ area.number }}</td>
-                <td>
-                    <a href="{% url area-edit area.id %}">
-                        {{ area.address }}
-                    </a>
-                </td>
-
-                <td class="area-inline-actions text-right">
-                    <form method="POST" action="{% url area-move area.id %}" class="move-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="to" value=""/>
-                        <input type="hidden" name="back_to" value="{{ folder.id }}"/>
-                        <div class="dropdown">
-                            <a href="#" class="btn btn-xs dropdown-toggle" data-toggle="dropdown">Перенести</a>
-                            <ul class="dropdown-menu" role="menu">
-                                {% for f in all_folders %}
-                                    <li {% if f == folder %}class="disabled"{% endif %}><a href="#" class="folder-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </form>
-
-                    <a target="_blank" href="{% url area-print area.id %}" class="btn btn-xs">Печать</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    {% include 'areas/list_table.html' %}
 
     {% paginator %}
 {% endblock %}

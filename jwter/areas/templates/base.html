@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load bootstrap3 %}
 {% load static %}
+{% load split %}
 <html>
     <head>
         {% block head %}
@@ -24,6 +25,14 @@
                 <div class="page-header">
                     <h3>Управление участками</h3>
                 </div>
+
+                {% block messages %}
+                    {% for message in messages %}
+                        <div class="alert{% for tag in message.tags|split %} alert-{% if tag == 'error' %}danger{% else %}{{ tag }}{% endif %}{% endfor %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endblock %}
 
                 {% block content %}
                 {% endblock %}

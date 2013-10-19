@@ -174,7 +174,7 @@ def print_area_blank(c, x, y, area):
     c.setFont('FreeSerif', 12)
 
     font_size = 13
-    while font_size >= 7:
+    while font_size >= 6:
         text = c.beginText()
         text.setTextOrigin(4.25*cm, address_y + 0.5*mm)
         text.setFont('FreeSerif', font_size)

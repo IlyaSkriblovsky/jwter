@@ -1,43 +1,71 @@
 # -*- coding: utf-8 -*-
 
 from django import forms
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
-from jwter.areas.models import Area
+from jwter.areas.models import Area, ArchivedArea, Folder
 from jwter.utils import ExtendedMetaModelForm
+
+
+_area_fields_spec = {
+    'number': {
+        '+error_messages': {
+            'required': u'Укажите номер участка',
+            'invalid':  u'Номер участка должен быть числом',
+            'unique':   u'Участок с таким номером уже есть',
+        }
+    },
+
+    'address': {
+        '+error_messages': {
+            'required': u'Укажите адрес',
+        }
+    },
+
+    'x': {
+        'widget': forms.HiddenInput()
+    },
+
+    'y': {
+        'widget': forms.HiddenInput()
+    },
+
+    'zoom': {
+        'widget': forms.HiddenInput()
+    },
+
+    'marks': {
+        'widget': forms.HiddenInput()
+    }
+}
 
 
 class AreaForm(ExtendedMetaModelForm):
     class Meta:
         model = Area
 
-        field_args = {
-            'number': {
-                '+error_messages': {
-                    'required': u'Укажите номер участка',
-                    'invalid':  u'Номер участка должен быть числом',
-                    'unique':   u'Участок с таким номером уже есть',
-                }
-            },
+        field_args = _area_fields_spec
 
-            'address': {
-                '+error_messages': {
-                    'required': u'Укажите адрес',
-                }
-            },
 
-            'x': {
-                'widget': forms.HiddenInput()
-            },
+class ArchivedAreaForm(ExtendedMetaModelForm):
+    class Meta:
+        model = ArchivedArea
 
-            'y': {
-                'widget': forms.HiddenInput()
-            },
+        field_args = _area_fields_spec
 
-            'zoom': {
-                'widget': forms.HiddenInput()
-            },
 
-            'marks': {
-                'widget': forms.HiddenInput()
-            }
-        }
+    restore_to = forms.CharField(widget = forms.HiddenInput(), required = False)
+
+
+    def clean(self):
+        if self.cleaned_data.get('restore_to', ''):
+            if Area.objects.filter(number = self.cleaned_data['number']):
+                raise ValidationError(u'Участок с таким номером уже существует')
+
+        return super(ArchivedAreaForm, self).clean()
+
+    def save(self):
+        aarea = super(ArchivedAreaForm, self).save()
+        if self.cleaned_data.get('restore_to', ''):
+            aarea.restore_to(get_object_or_404(Folder, id = int(self.cleaned_data['restore_to'])))

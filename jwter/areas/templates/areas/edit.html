@@ -16,18 +16,28 @@
 {% endblock %}
 
 {% block content %}
-    {% if area.id %}
+    {% if not archived %}
+        {% if area.id %}
+            <div class="pull-right">
+                <form method="POST" action="{% url area-archive number=area.number %}">
+                    {% csrf_token %}
+                    <button class="btn btn-danger">Архивировать</button>
+                </form>
+            </div>
+        {% endif %}
+    {% else %}
         <div class="pull-right">
-            <form method="POST" action="{% url area-delete area.id %}">
+            <form method="POST" action="{% url archive-restore area.id %}" class="move-form">
                 {% csrf_token %}
-                <button class="btn btn-danger">Удалить участок</button>
             </form>
         </div>
     {% endif %}
 
-    <div>
-        <a href="{% url folder folder.id %}" class="list-link">← {{ folder.name }}</a>
-    </div>
+    {% if folder %}
+        <div>
+            <a href="{% url folder folder.id %}" class="list-link">← {{ folder.name }}</a>
+        </div>
+    {% endif %}
 
     <div class="clearfix"></div>
 
@@ -82,9 +92,27 @@
             <div class="col-md-8 col-lg-7">
                 <input type="submit" class="btn btn-primary" value="Сохранить"/>
                 <input type="submit" class="btn btn-info" name="apply" value="Применить"/>
-                <a href="{% url folder folder.id %}" class="btn btn-default">Отмена</a>
-                {% if area.id %}
-                    <a target="_blank" href="{% url area-print pk=area.id %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
+
+                {% if archived %}
+                    <a href="{% url archive %}" class="btn btn-default">Отмена</a>
+                {% else %}
+                    <a href="{% url folder folder.id %}" class="btn btn-default">Отмена</a>
+                {% endif %}
+
+                {% if not archived and area.id %}
+                    <a target="_blank" href="{% url area-print number=area.number %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
+                {% endif %}
+
+
+                {% if archived %}
+                    <div class="btn-group dropup col-md-offset-1 col-sm-offset-1" style="display: inline-block">
+                        <a href="#" class="btn btn-success dropdown-toggle" data-toggle="dropdown"> Восстановить</a>
+                        <ul class="dropdown-menu" role="menu">
+                            {% for f in all_folders %}
+                                <li><a href="#" class="restore-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 {% endif %}
             </div>
         </div>
