@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load paginator %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'area/list.css' %}"/>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="{% static 'area/list.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    {% include 'folders/folders_tabs.html' %}
+
+    {% include 'areas/list_table.html' with area_list=archivedarea_list %}
+
+    {% paginator %}
+{% endblock %}

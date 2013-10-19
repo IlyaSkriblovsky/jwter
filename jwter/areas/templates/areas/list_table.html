@@ -1,0 +1,43 @@
+<table class="table table-hover areas-list">
+    <thead>
+        {% include 'areas/smart_list_header.html' %}
+    </thead>
+
+    <tbody>
+    {% for area in area_list %}
+        <tr>
+            <td>{{ area.number }}</td>
+            <td>
+                <a href="{{ area.get_absolute_url }}">
+                    {{ area.address }}
+                </a>
+            </td>
+
+            <td class="area-inline-actions text-right">
+                <form
+                    method="POST"
+                    action="{% if archive %}{% url archive-restore area.id %}{% else %}{% url area-move number=area.number %}{% endif %}"
+                    class="move-form"
+                >
+                    {% csrf_token %}
+                    <input type="hidden" name="to" value=""/>
+                    {% if not archive %}
+                        <input type="hidden" name="back_to" value="{{ folder.id }}"/>
+                    {% endif %}
+
+                    <div class="dropdown">
+                        <a href="#" class="btn btn-xs dropdown-toggle" data-toggle="dropdown"> {% if archive %} Восстановить {% else %} Перенести {% endif %} </a>
+                        <ul class="dropdown-menu" role="menu">
+                            {% for f in all_folders %}
+                                <li {% if f == folder %}class="disabled"{% endif %}><a href="#" class="folder-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </form>
+
+                <a target="_blank" href="{% url area-print number=area.number %}" class="btn btn-xs">Печать</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

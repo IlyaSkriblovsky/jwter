@@ -1,0 +1,15 @@
+<ul class="nav nav-tabs">
+    {% for f in all_folders %}
+        <li {% if f == folder %}class="active"{% endif %}>
+            <a href="{% url folder f.id %}">{{ f.name }}</a>
+        </li>
+    {% endfor %}
+
+    <li class="navbar-right {% if folder_settings %}active{% endif %}">
+        <a href="{% url folders %}"><i class="glyphicon glyphicon-cog"></i></a>
+    </li>
+
+    <li class="navbar-right {% if archive %}active{% endif %}">
+        <a href="{% url archive %}">Архив</a>
+    </li>
+</ul>
