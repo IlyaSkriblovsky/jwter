@@ -2,6 +2,9 @@
 
 import httplib
 import StringIO
+import urlparse
+import multiprocessing
+from itertools import izip
 
 from django.conf import settings
 
@@ -42,9 +45,6 @@ def gen_circle(x1, y1, x2, y2):
             (x1 + x2)/2 + math.cos(angle) * (x2 - x1)/2,
             (y1 + y2)/2 + math.sin(angle) * (y2 - y1)/2,
         ])
-    # return ','.join(
-    #     ','.join(str(c) for c in point) for point in points
-    # )
 
     return yandex_encode(points)
 
@@ -67,9 +67,9 @@ def yandex_encode(points):
     return base64.b64encode(bytes).replace('+', '-').replace('/', '_')
 
 
-def get_map(area):
-    if area.marks:
-        marks = [ mark.split('|') for mark in area.marks.split(',') ]
+def build_map_url(x, y, zoom, marks):
+    if marks:
+        marks = [ mark.split('|') for mark in marks.split(',') ]
     else:
         marks = []
 
@@ -88,35 +88,32 @@ def get_map(area):
 
     url_domain = 'static-maps.yandex.ru'
     url_path = '/1.x/?l=map&ll={x},{y}&z={z}&size={w},{h}{pl}'.format(
-        x = area.x,
-        y = area.y,
-        z = area.zoom,
+        x = x,
+        y = y,
+        z = zoom,
         w = 650,
         h = 284,
         pl = '&pl=' + polyline_arg if polyline_arg else ''
     )
-    url = ''.join(('http://', url_domain, url_path))
+    return ''.join(('http://', url_domain, url_path))
 
 
-    png = MapCache.get_map(url)
-    if png:
-        save_to_cache = False
-    else:
-        http = httplib.HTTPConnection(url_domain)
-        http.request('GET', url_path)
-        png = http.getresponse().read()
-        http.close()
-        save_to_cache = True
-
+def fetch_map(url):
+    url_parts = urlparse.urlparse(url)
 
     try:
-        image = Image.open(StringIO.StringIO(png)).convert('RGB')
-        if save_to_cache:
-            MapCache.save_map(url, png)
-    except IOError as e:
-        raise MapFetchingException("Can't parse map image: {0} {1}".format(e.message, url))
+        http = httplib.HTTPConnection(url_parts.netloc)
+        http.request('GET', '?'.join((url_parts.path, url_parts.query)))
+        response = http.getresponse()
+        if response.status == 200:
+            return response.read()
+        else:
+            raise Exception("Invalid response from Yandex.Maps Static API: {0}".format(response.read()))
+    finally:
+        http.close()
 
-    return adjust_colors(image), url
+    return None
+
 
 
 ADJ_BRIGHTNESS = 1.0
@@ -131,7 +128,7 @@ BLANK_WIDTH  = 146*mm
 BLANK_HEIGHT =  94*mm
 
 
-def print_area_blank(c, x, y, area):
+def print_area_blank(c, x, y, area, map_image):
     c.saveState()
     c.translate(x, y)
 
@@ -186,39 +183,58 @@ def print_area_blank(c, x, y, area):
     c.drawText(text)
 
 
-    map, url = get_map(area)
-
-    c.drawImage(ImageReader(map), 1*cm, 2*cm, BLANK_WIDTH - 2*cm, BLANK_HEIGHT - 3.9*cm)
+    c.drawImage(ImageReader(map_image), 1*cm, 2*cm, BLANK_WIDTH - 2*cm, BLANK_HEIGHT - 3.9*cm)
 
     c.restoreState()
 
 
-def print_one_area(area):
+def init_pdf():
     for font, filename in settings.PDF_FONTS.iteritems():
         pdfmetrics.registerFont(TTFont(font, filename))
 
-    c = Canvas(
-        '1.pdf',
-        pagesize = (BLANK_WIDTH, BLANK_HEIGHT)
-    )
-
-    print_area_blank(c, 0, 0, area)
-
-    c.showPage()
-    return c.getpdfdata()
 
 
 def print_many_areas(areas):
-    for font, filename in settings.PDF_FONTS.iteritems():
-        pdfmetrics.registerFont(TTFont(font, filename))
+    init_pdf()
 
-    c = Canvas(
-        '1.pdf',
-        pagesize = A4
-    )
+    c = Canvas('1.pdf', pagesize = A4)
 
     x = (A4[0] - BLANK_WIDTH) / 2
     y = (A4[1] - 3*BLANK_HEIGHT) / 2
+
+
+    map_urls = [ build_map_url(area.x, area.y, area.zoom, area.marks) for area in areas ]
+
+
+    urls_to_fetch = []
+    map_pngs = {}
+    for url in map_urls:
+        png = MapCache.get_map(url)
+        if png:
+            map_pngs[url] = png
+        else:
+            urls_to_fetch.append(url)
+
+
+    if urls_to_fetch:
+        fetched_pngs = multiprocessing.Pool(16).map(fetch_map, urls_to_fetch)
+    else:
+        fetched_pngs = []
+
+
+    for url, png in izip(urls_to_fetch, fetched_pngs):
+        if png is None:
+            raise Exception("Cannot fetch {0}".format(url))
+        map_pngs[url] = png
+
+    map_images = {}
+    for url, png in map_pngs.iteritems():
+        map_images[url] = adjust_colors(Image.open(StringIO.StringIO(png)).convert('RGB'))
+
+
+    # Saving PNG to MapCache only after creating Image from it to insure it is proper PNG
+    for url, png in izip(urls_to_fetch, fetched_pngs):
+        MapCache.save_map(url, png)
 
 
     for page_no in xrange((len(areas) + 2) / 3):
@@ -231,21 +247,18 @@ def print_many_areas(areas):
 
         c.line(0, y + 3*BLANK_HEIGHT, A4[0], y + 3*BLANK_HEIGHT)
 
-        print_area_blank(c, x, y + 2*BLANK_HEIGHT, areas[page_no*3 + 0])
+        print_area_blank(c, x, y + 2*BLANK_HEIGHT, areas[page_no*3 + 0], map_images[map_urls[page_no*3 + 0]])
         c.line(0, y + 2*BLANK_HEIGHT, A4[0], y + 2*BLANK_HEIGHT)
 
         if len(page_set) >= 2:
-            print_area_blank(c, x, y + BLANK_HEIGHT, areas[page_no*3 + 1])
+            print_area_blank(c, x, y + BLANK_HEIGHT, areas[page_no*3 + 1], map_images[map_urls[page_no*3 + 1]])
             c.line(0, y + BLANK_HEIGHT, A4[0], y + BLANK_HEIGHT)
 
         if len(page_set) >= 3:
-            print_area_blank(c, x, y, areas[page_no*3 + 2])
+            print_area_blank(c, x, y, areas[page_no*3 + 2], map_images[map_urls[page_no*3 + 2]])
             c.line(0, y, A4[0], y)
 
         c.showPage()
 
-
-    # print_area_blank(c, 0, 0, area1)
-    # print_area_blank(c, 0, BLANK_HEIGHT, area2)
 
     return c.getpdfdata()

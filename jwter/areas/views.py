@@ -16,7 +16,7 @@ from jwter.utils import render_to
 
 from jwter.areas.models import Area, Folder, ArchivedArea
 from jwter.areas.forms  import AreaForm, ArchivedAreaForm
-from jwter.areas.printer import print_one_area, print_many_areas
+from jwter.areas.printer import print_many_areas
 from jwter.areas.mixins import SmartListMixin
 
 
@@ -182,13 +182,6 @@ class AreaArchive(SingleObjectMixin, View):
         folder = area.folder
         area.archive()
         return redirect(folder)
-
-
-# class PrintAllAreas(View):
-# 
-#     def get(self, request):
-#         pdf = print_many_areas(Area.objects.all())
-#         return HttpResponse(pdf, 'application/pdf')
 
 
 class FolderPrint(SingleObjectMixin, View):
