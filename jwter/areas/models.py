@@ -10,6 +10,9 @@ from django.core.urlresolvers import reverse_lazy
 class Folder(models.Model):
     class Meta:
         ordering = ['-is_inbox', 'name']
+        permissions = (
+            ('can_move_all', 'Can move all areas to another folder'),
+        )
 
     name = models.CharField(u'Имя', max_length = 64)
 
@@ -76,6 +79,9 @@ def default_number():
 class Area(BaseArea):
     class Meta:
         ordering = ('number',)
+        permissions = (
+            ('can_archive', 'Can delete areas to Trash'),
+        )
 
     folder = models.ForeignKey(Folder, verbose_name = u'Папка')
 
@@ -103,6 +109,10 @@ class Area(BaseArea):
 class ArchivedArea(BaseArea):
     class Meta:
         ordering = ('number',)
+        permissions = (
+            ('can_view_archive', 'Can view archive'),
+            ('can_restore', 'Can restore area'),
+        )
 
     number = models.IntegerField(u'Номер участка')
 

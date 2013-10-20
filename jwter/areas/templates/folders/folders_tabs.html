@@ -5,11 +5,15 @@
         </li>
     {% endfor %}
 
-    <li class="navbar-right {% if folder_settings %}active{% endif %}">
-        <a href="{% url folders %}"><i class="glyphicon glyphicon-cog"></i></a>
-    </li>
+    {% if perms.areas.add_folder or perms.areas.change_folder or perms.areas.delete_folder %}
+        <li class="navbar-right {% if folder_settings %}active{% endif %}">
+            <a href="{% url folders %}"><i class="glyphicon glyphicon-cog"></i></a>
+        </li>
+    {% endif %}
 
-    <li class="navbar-right {% if archive %}active{% endif %}">
-        <a href="{% url archive %}"><i class="glyphicon glyphicon-trash"></i>&nbsp; Архив</a>
-    </li>
+    {% if perms.areas.can_view_archive %}
+        <li class="navbar-right {% if archive %}active{% endif %}">
+            <a href="{% url archive %}"><i class="glyphicon glyphicon-trash"></i>&nbsp; Корзина</a>
+        </li>
+    {% endif %}
 </ul>

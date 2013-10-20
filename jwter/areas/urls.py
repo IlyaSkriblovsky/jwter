@@ -5,6 +5,9 @@ from jwter.areas.views import *
 urlpatterns = patterns('jwter.areas.views',
     url(r'^$', index, name = 'index'),
 
+    url(r'^login$', Login.as_view(), name = 'login'),
+    url(r'^logout$', Logout.as_view(), name = 'logout'),
+
     url(r'^folders$', FolderList.as_view(), name = 'folders'),
 
     url(r'^archive$', Archive.as_view(), name = 'archive'),
@@ -23,6 +26,6 @@ urlpatterns = patterns('jwter.areas.views',
     url(r'^area/(?P<number>\d+)/print$', AreaPrint.as_view(), name = 'area-print'),
     url(r'^area/(?P<number>\d+)/archive$', AreaArchive.as_view(), name = 'area-archive'),
 
-    url(r'^area/(?P<number>\d+)/move$',     Move.as_view(),    name = 'area-move'),
+    url(r'^area/(?P<number>\d+)/move$', AreaMove.as_view(),    name = 'area-move'),
     url(r'^move-all$', MoveAll.as_view(), name = 'area-move-all'),
 )

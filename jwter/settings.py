@@ -11,6 +11,12 @@ PDF_FONTS = {
 }
 
 
+
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login'
+LOGOUT_URL = '/logout'
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 

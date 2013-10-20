@@ -17,24 +17,30 @@
     {% include 'folders/folders_tabs.html' %}
 
     <div class="folder-actions pull-right">
-        <form method="POST" action="{% url area-move-all %}" class="form form-inline move-all-form" style="display: inline">
-            {% csrf_token %}
-            <input type="hidden" name="from" value="{{ folder.id }}"/>
-            <input type="hidden" name="to" value=""/>
-            <div class="btn-group text-left">
-                <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">Перенести все в... <span class="caret"></span></button>
-                <ul class="dropdown-menu">
-                    {% for f in all_folders %}
-                        <li {% if f == folder %}class="disabled"{% endif %}><a href="#" class="folder-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </form>
+        {% if perms.areas.can_move_all %}
+            <form method="POST" action="{% url area-move-all %}" class="form form-inline move-all-form" style="display: inline">
+                {% csrf_token %}
+                <input type="hidden" name="from" value="{{ folder.id }}"/>
+                <input type="hidden" name="to" value=""/>
+                <div class="btn-group text-left">
+                    <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">Перенести все в... <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        {% for f in all_folders %}
+                            <li {% if f == folder %}class="disabled"{% endif %}><a href="#" class="folder-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </form>
+        {% endif %}
         <a target="_blank" href="{% url folder-print folder.id %}" class="btn btn-warning">Напечатать все</a>
     </div>
+
     <div class="folder-actions">
-        <a href="{% url area-new folder.id %}" class="btn btn-primary">Новый участок</a>
+        {% if perms.areas.add_area %}
+            <a href="{% url area-new folder.id %}" class="btn btn-primary">Новый участок</a>
+        {% endif %}
     </div>
+
     <div class="clearfix"></div>
 
     {% include 'areas/list_table.html' %}

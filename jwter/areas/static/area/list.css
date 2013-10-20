@@ -5,7 +5,7 @@
 
 .areas-list th .input-sm { height: 22px; font-size: 11px; }
 
-.folder-actions { padding: 20px 0; }
+.folder-actions { padding: 20px 0 10px 0; }
 
 .move-form, .move-all-form { display: inline-block; }
 

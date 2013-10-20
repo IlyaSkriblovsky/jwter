@@ -22,8 +22,25 @@
     <body>
         {% block body %}
             <div class="container">
+                <!--
                 <div class="page-header">
                     <h3>Управление участками</h3>
+                </div>
+                -->
+
+                <div class="navbar navbar-default" role="navigation">
+                    <div class="navbar-header">
+                        <a href="/" class="navbar-brand">Управление участками</a>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                        <ul class="nav navbar-nav navbar-right">
+                            <li><a href="{% url logout %}">Выход</a></li>
+                        </ul>
+                        <div class="navbar-right">
+                            <p class="navbar-text"><i>Вы зашли как {{ user.username }}</i></p>
+                        </div>
+                    {% endif %}
                 </div>
 
                 {% block messages %}

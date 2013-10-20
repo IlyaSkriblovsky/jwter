@@ -20,11 +20,13 @@
     {% include 'folders/folders_tabs.html' %}
 
     <div>
-        <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
-            {% csrf_token %}
-            <input type="hidden" name="name" />
-            <button class="btn btn-primary new-folder">Новая папка</button>
-        </form>
+        {% if perms.areas.add_folder %}
+            <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
+                {% csrf_token %}
+                <input type="hidden" name="name" />
+                <button class="btn btn-primary new-folder">Новая папка</button>
+            </form>
+        {% endif %}
 
         <h3>Папки</h3>
     </div>
@@ -42,15 +44,19 @@
             {% for f in folder_list %}
                 <tr>
                     <td>
-                        {% if f.is_inbox %}
+                        {% if f.is_inbox or not perms.areas.change_folder %}
                             {{ f.name }}
                         {% else %}
                             <a href="#" class="folders-list-link" folder-id="{{ f.id }}">{{ f.name }}</a>
+                            <form method="POST" action="{% url folder-rename pk=f.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="new_name" />
+                            </form>
                         {% endif %}
                     </td>
 
                     <td>
-                        {% if not f.is_inbox %}
+                        {% if perms.areas.delete_folder and not f.is_inbox %}
                             <form method="POST" action="{% url folder-delete f.id %}">
                                 {% csrf_token %}
                                 <button class="btn btn-danger btn-xs">Удалить</button>

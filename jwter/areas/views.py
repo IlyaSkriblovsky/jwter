@@ -3,6 +3,7 @@
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView
 from django.views.generic.edit import CreateView
+from django.views.generic.edit import FormView
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.base import View
 from django.core.urlresolvers import reverse, reverse_lazy
@@ -10,27 +11,29 @@ from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse
 from django.db import IntegrityError
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.utils.decorators import method_decorator
+from django.contrib.auth import login, logout
+from django.conf import settings
+from django.utils.http import is_safe_url
+from django.core.exceptions import PermissionDenied
 
 
 from jwter.utils import render_to
 
 from jwter.areas.models import Area, Folder, ArchivedArea
-from jwter.areas.forms  import AreaForm, ArchivedAreaForm
+from jwter.areas.forms  import AreaForm, ArchivedAreaForm, LoginForm
 from jwter.areas.printer import print_many_areas
 from jwter.areas.mixins import SmartListMixin
+from jwter.areas.decorators import class_decorator
 
 
-# @render_to('areas/list.html')
-# def area_list(request):
-#     return {
-#         'areas': Area.objects.all(),
-#     }
-
-
+@login_required
 def index(request):
     return redirect(Folder.get_inbox())
 
 
+@class_decorator(login_required)
 class FolderView(SmartListMixin, ListView):
     template_name = 'areas/list.html'
 
@@ -56,6 +59,7 @@ class FolderView(SmartListMixin, ListView):
         return context
 
 
+@class_decorator(permission_required('areas.can_view_archive'))
 class Archive(SmartListMixin, ListView):
     template_name = 'areas/archive.html'
 
@@ -71,15 +75,7 @@ class Archive(SmartListMixin, ListView):
 
 
 
-class AreaList(SmartListMixin, ListView):
-    template_name = 'areas/list.html'
-
-    model = Area
-    list_fields = ('number', 'address')
-
-    paginate_by = 15
-
-
+@class_decorator(permission_required('areas.change_area'))
 class AreaEdit(UpdateView):
     model = Area
     slug_field = 'number'
@@ -103,6 +99,7 @@ class AreaEdit(UpdateView):
             return self.object.folder.get_absolute_url()
 
 
+@class_decorator(permission_required('areas.change_archivedarea'))
 class ArchivedAreaEdit(UpdateView):
     model = ArchivedArea
     form_class = ArchivedAreaForm
@@ -115,6 +112,11 @@ class ArchivedAreaEdit(UpdateView):
         context['all_folders'] = Folder.objects.all()
         return context
 
+    def form_valid(self, form):
+        if self.request.REQUEST.get('restore_to', '') and not self.request.user.has_perm('areas.can_restore'):
+            raise PermissionDenied()
+        return super(ArchivedAreaEdit, self).form_valid(form)
+
     def get_success_url(self):
         if 'apply' in self.request.REQUEST:
             return self.get_object().get_absolute_url()
@@ -124,6 +126,7 @@ class ArchivedAreaEdit(UpdateView):
 
 
 
+@class_decorator(permission_required('areas.add_area'))
 class AreaNew(CreateView):
     model = Area
     form_class = AreaForm
@@ -161,6 +164,7 @@ class AreaNew(CreateView):
 
 
 
+@class_decorator(login_required)
 class AreaPrint(SingleObjectMixin, View):
     model = Area
     slug_field = 'number'
@@ -172,6 +176,7 @@ class AreaPrint(SingleObjectMixin, View):
         return HttpResponse(pdf, 'application/pdf')
 
 
+@class_decorator(permission_required('areas.can_archive'))
 class AreaArchive(SingleObjectMixin, View):
     model = Area
     slug_field = 'number'
@@ -184,6 +189,7 @@ class AreaArchive(SingleObjectMixin, View):
         return redirect(folder)
 
 
+@class_decorator(login_required)
 class FolderPrint(SingleObjectMixin, View):
     model = Folder
 
@@ -192,6 +198,7 @@ class FolderPrint(SingleObjectMixin, View):
         return HttpResponse(pdf, 'application/pdf')
 
 
+@class_decorator(login_required)
 class FolderList(ListView):
     template_name = 'folders/list.html'
 
@@ -204,6 +211,7 @@ class FolderList(ListView):
         return context
 
 
+@class_decorator(permission_required('areas.change_folder'))
 class FolderRename(SingleObjectMixin, View):
     model = Folder
 
@@ -211,13 +219,15 @@ class FolderRename(SingleObjectMixin, View):
         f = self.get_object()
         f.name = request.REQUEST['new_name']
         f.save()
-        return HttpResponse('ok')
+        return redirect('folders')
 
+@class_decorator(permission_required('areas.add_folder'))
 class FolderNew(View):
     def post(self, request, *args, **kwargs):
         Folder(name = request.REQUEST['name']).save()
         return redirect('folders')
 
+@class_decorator(permission_required('areas.delete_folder'))
 class FolderDelete(SingleObjectMixin, View):
     model = Folder
 
@@ -230,6 +240,7 @@ class FolderDelete(SingleObjectMixin, View):
 
 
 
+@class_decorator(permission_required('areas.can_move_all'))
 class MoveAll(View):
 
     def post(self, request, *args, **kwargs):
@@ -241,7 +252,8 @@ class MoveAll(View):
         return redirect(_to)
 
 
-class Move(SingleObjectMixin, View):
+@class_decorator(permission_required('areas.change_area'))
+class AreaMove(SingleObjectMixin, View):
     model = Area
     slug_field = 'number'
     slug_url_kwarg = 'number'
@@ -255,6 +267,7 @@ class Move(SingleObjectMixin, View):
 
 
 
+@class_decorator(permission_required('areas.can_restore'))
 class ArchiveRestore(SingleObjectMixin, View):
     model = ArchivedArea
 
@@ -267,3 +280,41 @@ class ArchiveRestore(SingleObjectMixin, View):
             messages.error(self.request, u'Участок с таким номером уже существует')
 
         return redirect('archive')
+
+
+
+class Login(FormView):
+    template_name = 'login.html'
+    form_class = LoginForm
+
+    def get_redirect_url(self):
+        next = self.request.REQUEST.get('next', '')
+
+        if not is_safe_url(url = next, host = self.request.get_host()):
+            next = settings.LOGIN_REDIRECT_URL
+
+        return next
+
+
+    # def get(self, request, *args, **kwargs):
+    #     if request.user.is_authenticated():
+    #         return redirect(self.get_redirect_url())
+
+    #     return super(Login, self).get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+
+        login(self.request, form.get_user())
+
+        if self.request.session.test_cookie_worked():
+            self.request.session.delete_test_cookie()
+
+        return redirect(self.get_redirect_url())
+
+
+class Logout(View):
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+
+        return redirect('login')

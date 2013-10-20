@@ -3,6 +3,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.forms import AuthenticationForm
 
 from jwter.areas.models import Area, ArchivedArea, Folder
 from jwter.utils import ExtendedMetaModelForm
@@ -69,3 +70,19 @@ class ArchivedAreaForm(ExtendedMetaModelForm):
         aarea = super(ArchivedAreaForm, self).save()
         if self.cleaned_data.get('restore_to', ''):
             aarea.restore_to(get_object_or_404(Folder, id = int(self.cleaned_data['restore_to'])))
+
+
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(label = u'Логин', max_length = 30, error_messages = {
+        'required': u'Это поле обязательно'
+    })
+    password = forms.CharField(label = u'Пароль', widget = forms.PasswordInput, error_messages = {
+        'required': u'Это поле обязательно'
+    })
+
+    error_messages = {
+        'invalid_login': u'Неправильный логин и/или пароль',
+        'no_cookies': u'В вашем браузере отключены куки. Они обязательны для входа',
+        'inactive': u'Эта учётная запись неактивна',
+    }

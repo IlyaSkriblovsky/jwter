@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% load bootstrap3 %}
+
+{% block content %}
+    <form method="POST" class="form form-horizontal" role="form">
+        {% csrf_token %}
+        {% bootstrap_form form layout='horizontal' %}
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label"></label>
+            <div class="col-md-8 col-lg-7">
+                <input type="submit" class="btn btn-primary" value="Вход"/>
+            </div>
+        </div>
+    </form>
+{% endblock %}

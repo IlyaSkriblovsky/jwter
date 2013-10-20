@@ -2,12 +2,9 @@ $(document).on('click', '.folders-list-link', function () {
     var new_name = prompt('Переименовать папку', $(this).text())
     if (new_name)
     {
-        $.post(URL.folder_rename($(this).attr('folder-id')), {
-            csrfmiddlewaretoken: csrftoken,
-            new_name: new_name
-        })
-
-        $(this).text(new_name)
+        var form = $(this).next('form')
+        form.find('[name="new_name"]').val(new_name)
+        form.submit()
     }
 
     return false

@@ -17,11 +17,11 @@
 
 {% block content %}
     {% if not archived %}
-        {% if area.id %}
+        {% if area.id and perms.areas.can_archive %}
             <div class="pull-right">
                 <form method="POST" action="{% url area-archive number=area.number %}">
                     {% csrf_token %}
-                    <button class="btn btn-danger">Архивировать</button>
+                    <button class="btn btn-danger">Удалить</button>
                 </form>
             </div>
         {% endif %}
@@ -104,7 +104,7 @@
                 {% endif %}
 
 
-                {% if archived %}
+                {% if archived and perms.areas.can_restore %}
                     <div class="btn-group dropup col-md-offset-1 col-sm-offset-1" style="display: inline-block">
                         <a href="#" class="btn btn-success dropdown-toggle" data-toggle="dropdown"> Восстановить</a>
                         <ul class="dropdown-menu" role="menu">
