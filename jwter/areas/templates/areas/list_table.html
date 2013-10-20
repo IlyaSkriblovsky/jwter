@@ -27,7 +27,7 @@
 
                     <div class="dropdown">
                         <a href="#" class="btn btn-xs dropdown-toggle" data-toggle="dropdown"> {% if archive %} Восстановить {% else %} Перенести {% endif %} </a>
-                        <ul class="dropdown-menu" role="menu">
+                        <ul class="dropdown-menu text-left" role="menu">
                             {% for f in all_folders %}
                                 <li {% if f == folder %}class="disabled"{% endif %}><a href="#" class="folder-menu-item" folder-id="{{ f.id }}">{{ f.name }}</a></li>
                             {% endfor %}
@@ -35,7 +35,9 @@
                     </div>
                 </form>
 
+                {% if not archive %}
                 <a target="_blank" href="{% url area-print number=area.number %}" class="btn btn-xs">Печать</a>
+                {% endif %}
             </td>
         </tr>
     {% endfor %}
