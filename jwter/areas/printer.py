@@ -217,7 +217,9 @@ def print_many_areas(areas):
 
 
     if urls_to_fetch:
-        fetched_pngs = multiprocessing.Pool(16).map(fetch_map, urls_to_fetch)
+        pool = multiprocessing.Pool(16)
+        fetched_pngs = pool.map(fetch_map, urls_to_fetch)
+        pool.close()
     else:
         fetched_pngs = []
 
