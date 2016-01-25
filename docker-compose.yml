@@ -1,0 +1,19 @@
+db:
+    image: mysql
+    environment:
+        - MYSQL_ROOT_PASSWORD=qweasdzxc
+        - MYSQL_DATABASE=jwter
+        - MYSQL_USER=jwter
+        - MYSQL_PASSWORD=jwter
+    volumes:
+        - ./data:/var/lib/mysql
+
+django:
+    build: .
+    volumes:
+        - ./media:/jwter-media
+    #     - .:/app
+    ports:
+        - "localhost:8000:8000"
+    links:
+        - db
