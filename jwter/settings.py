@@ -17,6 +17,9 @@ LOGIN_URL = '/login'
 LOGOUT_URL = '/logout'
 
 
+SECURE_PROXY_SSL_HEADER = ('ORIGINAL_PROTO', 'https')
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
