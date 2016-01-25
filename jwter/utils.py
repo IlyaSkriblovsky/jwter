@@ -68,3 +68,17 @@ class ExtendedMetaModelForm(forms.ModelForm):
                             # Replace existing attribute
                             setattr(field, attr_name, attr_val)
 
+
+
+from django.views.generic.edit import UpdateView
+from django.core.exceptions import PermissionDenied
+
+class UpdateViewExtPerms(UpdateView):
+    save_permission = None
+
+    def post(self, request, *args, **kwargs):
+        if self.save_permission is not None:
+            if not request.user.has_perm(self.save_permission):
+                raise PermissionDenied()
+
+        return super(UpdateViewExtPerms, self).post(request, *args, **kwargs)

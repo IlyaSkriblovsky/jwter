@@ -20,6 +20,7 @@ from django.core.exceptions import PermissionDenied
 
 
 from jwter.utils import render_to
+from jwter.utils import UpdateViewExtPerms
 
 from jwter.areas.models import Area, Folder, ArchivedArea
 from jwter.areas.forms  import AreaForm, ArchivedAreaForm, LoginForm
@@ -75,22 +76,20 @@ class Archive(SmartListMixin, ListView):
 
 
 
-@class_decorator(permission_required('areas.change_area'))
-class AreaEdit(UpdateView):
+@class_decorator(login_required)
+class AreaEdit(UpdateViewExtPerms):
     model = Area
     slug_field = 'number'
     slug_url_kwarg = 'number'
     form_class = AreaForm
     template_name = 'areas/edit.html'
 
+    save_permission = 'areas.change_area'
+
     def get_context_data(self, **kwargs):
         context = super(AreaEdit, self).get_context_data(**kwargs)
         context['folder'] = self.get_object().folder
         return context
-
-    def post(self, request, *args, **kwargs):
-        # print '!!!', self.get_object().number
-        return super(AreaEdit, self).post(request, *args, **kwargs)
 
     def get_success_url(self):
         if 'apply' in self.request.REQUEST:

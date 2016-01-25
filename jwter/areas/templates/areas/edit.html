@@ -90,8 +90,8 @@
         <div class="form-group">
             <label class="col-md-2 col-lg-2 control-label"></label>
             <div class="col-md-8 col-lg-7">
-                <input type="submit" class="btn btn-primary" value="Сохранить"/>
-                <input type="submit" class="btn btn-info" name="apply" value="Применить"/>
+                <input type="submit" class="btn btn-primary" value="Сохранить" {% if not perms.areas.change_area %}disabled{% endif %}/>
+                <input type="submit" class="btn btn-info" name="apply" value="Применить" {% if not perms.areas.change_area %}disabled{% endif %}/>
 
                 {% if archived %}
                     <a href="{% url archive %}" class="btn btn-default">Отмена</a>

@@ -8,13 +8,18 @@
         <tr>
             <td>{{ area.number }}</td>
             <td>
-                {% if archive and perms.areas.change_archivedarea or not archive and perms.areas.change_area %}
-                    <a href="{{ area.get_absolute_url }}">
+                {% comment %}
+                    {% if archive and perms.areas.change_archivedarea or not archive and perms.areas.change_area %}
+                        <a href="{{ area.get_absolute_url }}">
+                            {{ area.address }}
+                        </a>
+                    {% else %}
                         {{ area.address }}
-                    </a>
-                {% else %}
+                    {% endif %}
+                {% endcomment %}
+                <a href="{{ area.get_absolute_url }}">
                     {{ area.address }}
-                {% endif %}
+                </a>
             </td>
 
             <td class="area-inline-actions text-right">
