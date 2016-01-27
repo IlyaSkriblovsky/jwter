@@ -14,6 +14,8 @@ This will run FastCGI server on local port 9001. To run local webserver on `http
 
     docker-compose up -f docker-compose.yml -f docker-compose.runserver.yml  up
 
+###Development
+If you are going to develop `jwter` it is useful to uncomment `- .:/app` line in `docker-compose.yml` to make your changes to source files to be reflected in docker container.
 
 ###Mapcache
 If you deploy `jwter` from SQL backup, remember to remove content of `areas_mapcache` table if you starting with empty mapcache folder
