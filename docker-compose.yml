@@ -1,5 +1,6 @@
 db:
     image: mysql
+    restart: unless-stopped
     environment:
         - MYSQL_ROOT_PASSWORD=qweasdzxc
         - MYSQL_DATABASE=jwter
@@ -10,10 +11,12 @@ db:
 
 django:
     build: .
+    command: ["python", "manage.py", "runfcgi", "method=prefork", "host=0.0.0.0", "port=9001", "daemonize=False"]
+    restart: unless-stopped
     volumes:
         - ./media:/jwter-media
     #     - .:/app
     ports:
-        - "localhost:8000:8000"
+        - "127.0.0.1:9001:9001"
     links:
         - db
