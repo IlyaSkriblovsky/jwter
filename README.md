@@ -1,4 +1,4 @@
-Deployment:
+###Deployment:
 
     docker-compose up db
 
@@ -9,5 +9,11 @@ then in other terminal:
 where `jwter.sql` is a data stored with `mysqldump`. Then do `Ctrl+C` on `docker-compose up db` and run:
 
     docker-compose up
+    
+This will run FastCGI server on local port 9001. To run local webserver on `http://localhost:9000/` run:
 
-**NOTE**: remove content of `areas_mapcache` table if you starting with empty mapcache folder
+    docker-compose up -f docker-compose.yml -f docker-compose.runserver.yml  up
+
+
+###Mapcache
+If you deploy `jwter` from SQL backup, remember to remove content of `areas_mapcache` table if you starting with empty mapcache folder
