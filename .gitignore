@@ -1,6 +1,5 @@
 *.pyc
 /pyenv/
 *.pid
-/media/
 /data/
 *.swp

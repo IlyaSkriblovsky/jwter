@@ -1,0 +1,10 @@
+[
+    {
+        "model": "areas.Folder",
+        "pk": 1,
+        "fields": {
+            "name": "Новые",
+            "is_inbox": true
+        }
+    }
+]

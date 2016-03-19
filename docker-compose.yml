@@ -1,22 +1,20 @@
-db:
-    image: mysql
-    restart: unless-stopped
-    environment:
-        - MYSQL_ROOT_PASSWORD=qweasdzxc
-        - MYSQL_DATABASE=jwter
-        - MYSQL_USER=jwter
-        - MYSQL_PASSWORD=jwter
-    volumes:
-        - ./data:/var/lib/mysql
+# Bootstrap:
+#   docker-compose run --rm manage syncdb
+#   docker-compose run --rm manage loaddata jwter/areas/fixtures/initial_data.json
+#   docker-compose up -d django
 
-django:
-    build: .
-    command: ["python", "manage.py", "runfcgi", "method=prefork", "host=0.0.0.0", "port=9001", "daemonize=False"]
-    restart: unless-stopped
-    volumes:
-        - ./media:/jwter-media
-    #     - .:/app
-    ports:
-        - "127.0.0.1:9001:9001"
-    links:
-        - db
+version: '2'
+
+services:
+    django:
+        build: .
+        command: uwsgi --master --http :9000 --module django.core.wsgi:get_wsgi_application()
+        environment:
+            - DJANGO_SETTINGS_MODULE=jwter.settings
+        volumes:
+            - ./data:/mnt/data
+
+
+    manage:
+        extends: django
+        entrypoint: python manage.py
