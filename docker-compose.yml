@@ -8,7 +8,7 @@ version: '2'
 services:
     django:
         build: .
-        command: uwsgi --master --http :9000 --die-on-term --module django.core.wsgi:get_wsgi_application()
+        command: uwsgi --master --socket :9001 -p 2 --die-on-term --module django.core.wsgi:get_wsgi_application()
         environment:
             - DJANGO_SETTINGS_MODULE=jwter.settings
         volumes:

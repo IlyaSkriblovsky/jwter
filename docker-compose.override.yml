@@ -2,12 +2,12 @@ version: '2'
 
 services:
     django:
-        # restart: unless-stopped
+        restart: unless-stopped
         volumes:
             - .:/app
         ports:
             # - "9000:9000"
-            - "127.0.0.1:9000:9000"
+            - "127.0.0.1:9001:9001"
 
     manage:
         volumes:
