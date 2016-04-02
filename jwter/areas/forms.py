@@ -61,7 +61,8 @@ class ArchivedAreaForm(ExtendedMetaModelForm):
 
     def clean(self):
         if self.cleaned_data.get('restore_to', ''):
-            if Area.objects.filter(number = self.cleaned_data['number']):
+            folder = get_object_or_404(Folder, pk = self.cleaned_data.get('restore_to', ''))
+            if Area.objects.filter(folder = folder, number = self.cleaned_data['number']):
                 raise ValidationError(u'Участок с таким номером уже существует')
 
         return super(ArchivedAreaForm, self).clean()

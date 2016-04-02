@@ -6,7 +6,7 @@
     <tbody>
     {% for area in area_list %}
         <tr>
-            <td>{{ area.number }}</td>
+            <td>{{ area.formatted_number }}</td>
             <td>
                 {% comment %}
                     {% if archive and perms.areas.change_archivedarea or not archive and perms.areas.change_area %}
@@ -26,7 +26,7 @@
                 {% if archive and perms.areas.can_restore or not archive and perms.areas.change_archivedarea %}
                     <form
                         method="POST"
-                        action="{% if archive %}{% url archive-restore area.id %}{% else %}{% url area-move number=area.number %}{% endif %}"
+                        action="{% if archive %}{% url archive-restore area.id %}{% else %}{% url area-move folder_id=folder.id number=area.number %}{% endif %}"
                         class="move-form"
                     >
                         {% csrf_token %}
@@ -47,7 +47,7 @@
                 {% endif %}
 
                 {% if not archive %}
-                    <a target="_blank" href="{% url area-print number=area.number %}" class="btn btn-xs">Печать</a>
+                    <a target="_blank" href="{% url area-print folder_id=folder.id number=area.number %}" class="btn btn-xs">Печать</a>
                 {% endif %}
             </td>
         </tr>

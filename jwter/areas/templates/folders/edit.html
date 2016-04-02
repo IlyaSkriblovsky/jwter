@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% load bootstrap3 %}
+
+{% block content %}
+    {% if folder.id and perms.areas.delete_folder %}
+        <div class="pull-right">
+            <form method="POST" action="{% url folder-delete pk=folder.id %}">
+                {% csrf_token %}
+                <button class="btn btn-danger">Удалить</button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div>
+        <a href="{% url folders %}" class="list-link">← Папки</a>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <form method="POST" class="form form-horizontal folder-form" role="form">
+        {% csrf_token %}
+
+        {% bootstrap_form form layout='horizontal' label_class='col-md-2 col-lg-2' field_class='col-md-8 col-lg-7' %}
+
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label"></label>
+            <div class="col-md-8 col-lg-7">
+                <input type="submit" class="btn btn-primary" value="Сохранить" {% if not perms.areas.change_folder %}disabled{% endif %}/>
+            </div>
+        </div>
+    </form>
+{% endblock %}

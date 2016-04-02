@@ -166,7 +166,7 @@ def print_area_blank(c, x, y, area, map_image):
 
 
     c.setFont('FreeSerif', 12)
-    c.drawCentredString((12.25*cm+BLANK_WIDTH-cm)/2, address_y + 0.5*mm, unicode(area.number))
+    c.drawCentredString((12.25*cm+BLANK_WIDTH-cm)/2, address_y + 0.5*mm, area.formatted_number())
 
     c.setFont('FreeSerif', 12)
 

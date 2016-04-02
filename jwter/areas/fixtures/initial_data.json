@@ -4,7 +4,8 @@
         "pk": 1,
         "fields": {
             "name": "Новые",
-            "is_inbox": true
+            "is_inbox": true,
+            "prefix": "Новый"
         }
     }
 ]

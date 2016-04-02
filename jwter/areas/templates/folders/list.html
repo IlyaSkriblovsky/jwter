@@ -24,7 +24,7 @@
             <form method="POST" action="{% url folder-new %}" class="folder-new-form pull-right">
                 {% csrf_token %}
                 <input type="hidden" name="name" />
-                <button class="btn btn-primary new-folder">Новая папка</button>
+                <a href="{% url folder-new %}" class="btn btn-primary new-folder">Новая папка</a>
             </form>
         {% endif %}
 
@@ -37,33 +37,21 @@
         <thead>
             <tr>
                 <th>Название</th>
-                <th></th>
             </tr>
         </thead>
         <tbody>
             {% for f in folder_list %}
-                <tr>
-                    <td>
-                        {% if f.is_inbox or not perms.areas.change_folder %}
-                            {{ f.name }}
-                        {% else %}
-                            <a href="#" class="folders-list-link" folder-id="{{ f.id }}">{{ f.name }}</a>
-                            <form method="POST" action="{% url folder-rename pk=f.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="new_name" />
-                            </form>
-                        {% endif %}
-                    </td>
-
-                    <td>
-                        {% if perms.areas.delete_folder and not f.is_inbox %}
-                            <form method="POST" action="{% url folder-delete f.id %}">
-                                {% csrf_token %}
-                                <button class="btn btn-danger btn-xs">Удалить</button>
-                            </form>
-                        {% endif %}
-                    </td>
-                </tr>
+                {% if not f.is_inbox %}
+                    <tr>
+                        <td>
+                            {% if f.is_inbox or not perms.areas.change_folder %}
+                                {{ f.name }}
+                            {% else %}
+                                <a href="{% url folder-edit pk=f.id %}" class="folders-list-link">{{ f.name }} ({{ f.prefix }})</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
             {% endfor %}
         </tbody>
     </table>

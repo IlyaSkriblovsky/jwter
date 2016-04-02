@@ -19,7 +19,7 @@
     {% if not archived %}
         {% if area.id and perms.areas.can_archive %}
             <div class="pull-right">
-                <form method="POST" action="{% url area-archive number=area.number %}">
+                <form method="POST" action="{% url area-archive folder_id=area.folder.id number=area.number %}">
                     {% csrf_token %}
                     <button class="btn btn-danger">Удалить</button>
                 </form>
@@ -39,11 +39,28 @@
         </div>
     {% endif %}
 
+    {% if archived %}
+        <div>
+            <a href="{% url archive %}" class="list-link">← Корзина</a>
+        </div>
+    {% endif %}
+
     <div class="clearfix"></div>
 
     <form method="POST" class="form form-horizontal area-form" role="form">
         {% csrf_token %}
-        {% bootstrap_form form layout='horizontal' exclude='address' label_class='col-md-2 col-lg-2' field_class='col-md-8 col-lg-7' %}
+
+        {% bootstrap_form form layout='horizontal' exclude='address,number' label_class='col-md-2 col-lg-2' field_class='col-md-8 col-lg-7' %}
+
+        <div class="form-group">
+            <label class="col-md-2 col-lg-2 control-label">Номер участка</label>
+            <div class="col-md-8 col-lg-7">
+                <div class="input-group">
+                    <span class="input-group-addon">{{ folder.prefix }} –</span>
+                    <input name="number" placeholder="Номер участка" type="text" class="form-control" id="id_number" value="{{ form.number.value|default_if_none:"" }}"/>
+                </div>
+            </div>
+        </div>
 
         <div class="form-group{% if form.address.errors %} has-error{% endif %}">
             <label class="col-md-2 col-lg-2 control-label">Адрес</label>
@@ -100,7 +117,7 @@
                 {% endif %}
 
                 {% if not archived and area.id %}
-                    <a target="_blank" href="{% url area-print number=area.number %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
+                    <a target="_blank" href="{% url area-print folder_id=area.folder_id number=area.number %}" class="btn btn-warning col-md-offset-1 col-sm-offset-1">Печать</a>
                 {% endif %}
 
 

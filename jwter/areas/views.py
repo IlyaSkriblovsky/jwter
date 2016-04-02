@@ -79,12 +79,13 @@ class Archive(SmartListMixin, ListView):
 @class_decorator(login_required)
 class AreaEdit(UpdateViewExtPerms):
     model = Area
-    slug_field = 'number'
-    slug_url_kwarg = 'number'
     form_class = AreaForm
     template_name = 'areas/edit.html'
 
     save_permission = 'areas.change_area'
+
+    def get_object(self):
+        return get_object_or_404(Area, folder_id = self.kwargs['folder_id'], number = self.kwargs['number'])
 
     def get_context_data(self, **kwargs):
         context = super(AreaEdit, self).get_context_data(**kwargs)
@@ -136,7 +137,9 @@ class AreaNew(CreateView):
 
     def get_initial(self):
         initial = super(AreaNew, self).get_initial()
-        initial['folder'] = self.get_folder()
+        folder = self.get_folder()
+        initial['folder'] = folder
+        initial['number'] = Area.first_free_number(folder)
         return initial
 
     def get_context_data(self, **kwargs):
@@ -166,8 +169,9 @@ class AreaNew(CreateView):
 @class_decorator(login_required)
 class AreaPrint(SingleObjectMixin, View):
     model = Area
-    slug_field = 'number'
-    slug_url_kwarg = 'number'
+
+    def get_object(self):
+        return get_object_or_404(Area, folder_id = self.kwargs['folder_id'], number = self.kwargs['number'])
 
     def get(self, request, *args, **kwargs):
         # pdf = print_one_area(self.get_object())
@@ -178,8 +182,9 @@ class AreaPrint(SingleObjectMixin, View):
 @class_decorator(permission_required('areas.can_archive'))
 class AreaArchive(SingleObjectMixin, View):
     model = Area
-    slug_field = 'number'
-    slug_url_kwarg = 'number'
+
+    def get_object(self):
+        return get_object_or_404(Area, folder_id = self.kwargs['folder_id'], number = self.kwargs['number'])
 
     def post(self, request, *args, **kwargs):
         area = self.get_object()
@@ -210,6 +215,14 @@ class FolderList(ListView):
         return context
 
 
+@class_decorator(login_required)
+class FolderEdit(UpdateViewExtPerms):
+    model = Folder
+    template_name = 'folders/edit.html'
+    save_permission = 'areas.change_folder'
+    success_url = reverse_lazy('folders')
+
+
 @class_decorator(permission_required('areas.change_folder'))
 class FolderRename(SingleObjectMixin, View):
     model = Folder
@@ -221,10 +234,13 @@ class FolderRename(SingleObjectMixin, View):
         return redirect('folders')
 
 @class_decorator(permission_required('areas.add_folder'))
-class FolderNew(View):
-    def post(self, request, *args, **kwargs):
-        Folder(name = request.REQUEST['name']).save()
-        return redirect('folders')
+class FolderNew(CreateView):
+    model = Folder
+    template_name = 'folders/edit.html'
+
+    # def form_valid(self, *args, **kwargs):
+    #     Folder(name = request.REQUEST['name']).save()
+    #     return redirect('folders')
 
 @class_decorator(permission_required('areas.delete_folder'))
 class FolderDelete(SingleObjectMixin, View):
@@ -246,21 +262,30 @@ class MoveAll(View):
         _from = get_object_or_404(Folder, pk = int(request.REQUEST['from']))
         _to   = get_object_or_404(Folder, pk = int(request.REQUEST['to']))
 
-        Area.objects.filter(folder = _from).update(folder = _to)
-
-        return redirect(_to)
+        try:
+            Area.objects.filter(folder = _from).update(folder = _to)
+            return redirect(_to)
+        except IntegrityError:
+            messages.error(self.request, u'В группах есть участки с одинаковыми номерами')
+            return redirect(_from)
 
 
 @class_decorator(permission_required('areas.change_area'))
 class AreaMove(SingleObjectMixin, View):
     model = Area
-    slug_field = 'number'
-    slug_url_kwarg = 'number'
+
+    def get_object(self):
+        return get_object_or_404(Area, folder_id = self.kwargs['folder_id'], number = self.kwargs['number'])
 
     def post(self, request, *args, **kwargs):
         area = self.get_object()
-        area.folder = get_object_or_404(Folder, pk = int(request.REQUEST['to']))
-        area.save()
+        folder = get_object_or_404(Folder, pk = int(request.REQUEST['to']))
+        area.folder = folder
+
+        try:
+            area.save()
+        except IntegrityError:
+            messages.error(self.request, u'В группе {} уже есть участок с таким номером'.format(folder.name))
 
         return redirect(get_object_or_404(Folder, pk = int(request.REQUEST['back_to'])))
 

@@ -9,6 +9,8 @@ from django.core.urlresolvers import reverse_lazy
 
 class Folder(models.Model):
     class Meta:
+        verbose_name=u'Папка'
+        verbose_name=u'Папки'
         ordering = ['-is_inbox', 'name']
         permissions = (
             ('can_move_all', 'Can move all areas to another folder'),
@@ -16,7 +18,9 @@ class Folder(models.Model):
 
     name = models.CharField(u'Имя', max_length = 64)
 
-    is_inbox   = models.BooleanField()
+    is_inbox   = models.BooleanField(editable=False)
+
+    prefix = models.CharField(u'Префикс', max_length = 32, unique = True)
 
 
     def __unicode__(self):
@@ -48,61 +52,86 @@ class BaseArea(models.Model):
 
 
 
-def default_number():
-    from django.db import connection
-    c = connection.cursor()
-    try:
-        c.execute('''
-            SELECT number
-            FROM areas_area
-            WHERE number = 1
-            LIMIT 1
-        ''')
-        if not c.fetchone():
-            return 1
+# def default_number():
+#     from django.db import connection
+#     c = connection.cursor()
+#     try:
+#         c.execute('''
+#             SELECT number
+#             FROM areas_area
+#             WHERE number = 1
+#             LIMIT 1
+#         ''')
+#         if not c.fetchone():
+#             return 1
 
-        c.execute('''
-            SELECT t1.number + 1 AS missing
-            FROM areas_area AS t1
-            LEFT JOIN areas_area AS t2
-                ON t1.number+1 = t2.number
-            WHERE t2.number IS NULL
-            ORDER BY t1.number
-            LIMIT 1
-        ''')
-        row = c.fetchone()
-        return row[0] if row else 1
-    finally:
-        c.close()
+#         c.execute('''
+#             SELECT t1.number + 1 AS missing
+#             FROM areas_area AS t1
+#             LEFT JOIN areas_area AS t2
+#                 ON t1.number+1 = t2.number
+#             WHERE t2.number IS NULL
+#             ORDER BY t1.number
+#             LIMIT 1
+#         ''')
+#         row = c.fetchone()
+#         return row[0] if row else 1
+#     finally:
+#         c.close()
 
 
 class Area(BaseArea):
     class Meta:
+        verbose_name=u'Участок'
+        verbose_name_plural=u'Участки'
         ordering = ('number',)
         permissions = (
             ('can_archive', 'Can delete areas to Trash'),
         )
+        unique_together = (('folder', 'number'),)
 
     folder = models.ForeignKey(Folder, verbose_name = u'Папка')
 
-    number = models.IntegerField(u'Номер участка', unique = True, default = default_number, error_messages = {
-        'unique': u'Участок с таким номером уже есть'
-    })
+    number = models.IntegerField(u'Номер участка')  # , default = default_number)
+
+
+    @classmethod
+    def first_free_number(cls, folder):
+        from django.db import connection
+        c = connection.cursor()
+        try:
+            c.execute('''
+                SELECT number
+                FROM areas_area
+                WHERE folder_id=%s AND number=1
+                LIMIT 1
+            ''', [folder.id])
+            if not c.fetchone():
+                return 1
+
+            c.execute('''
+                SELECT t1.number + 1 AS missing
+                FROM areas_area AS t1
+                LEFT JOIN areas_area AS t2
+                    ON t1.number+1=t2.number AND t1.folder_id=t2.folder_id
+                WHERE t1.folder_id=%s AND t2.number IS NULL
+                ORDER BY t1.number
+                LIMIT 1
+            ''', [folder.id])
+            row = c.fetchone()
+            return row[0] if row else 1
+        finally:
+            c.close()
 
 
     def get_absolute_url(self):
-        return reverse_lazy('area-edit', kwargs = { 'number': self.number })
+        return reverse_lazy('area-edit', kwargs = { 'folder_id': self.folder.id, 'number': self.number })
 
+    def formatted_number(self):
+        return u'{}–{}'.format(self.folder.prefix, self.number)
 
     def archive(self):
-        fields = {
-            f.name: f.value_from_object(self)
-            for f in self._meta.fields
-        }
-        del fields['id']
-        del fields['folder']
-
-        ArchivedArea(**fields).save()
+        ArchivedArea.create_from(self).save()
         self.delete()
 
 
@@ -114,10 +143,27 @@ class ArchivedArea(BaseArea):
             ('can_restore', 'Can restore area'),
         )
 
+    folder_prefix = models.CharField(u'Префикс', max_length = 32)
+
     number = models.IntegerField(u'Номер участка')
 
     def get_absolute_url(self):
         return reverse_lazy('archive-edit', kwargs = { 'pk': self.id })
+
+    def formatted_number(self):
+        return u'{}-{}'.format(self.folder_prefix, self.number)
+
+    @classmethod
+    def create_from(self, area):
+        fields = {
+            f.name: f.value_from_object(area)
+            for f in area._meta.fields
+        }
+        del fields['id']
+        del fields['folder']
+        fields['folder_prefix'] = area.folder.prefix
+
+        return ArchivedArea(**fields)
 
     def restore_to(self, folder):
         fields = {
@@ -125,8 +171,11 @@ class ArchivedArea(BaseArea):
             for f in self._meta.fields
         }
         del fields['id']
+        del fields['folder_prefix']
 
         fields['folder'] = folder
+
+        print(fields)
 
         Area(**fields).save()
         self.delete()
