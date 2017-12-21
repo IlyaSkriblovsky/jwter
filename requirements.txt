@@ -1,5 +1,4 @@
 django==1.4.3
-MySQL-python
 Pillow
 reportlab
 uwsgi
