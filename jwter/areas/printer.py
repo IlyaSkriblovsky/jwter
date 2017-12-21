@@ -74,7 +74,7 @@ def build_map_url(x, y, zoom, marks):
         marks = []
 
     polygons_enc = [
-        mark[1] for mark in marks if mark[0] == 'Polygon'
+        mark[1] for mark in marks if mark[0] == 'Polygon' and bool(mark[1])
     ]
 
     circles_enc = [
