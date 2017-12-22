@@ -39,7 +39,7 @@ class BaseArea(models.Model):
     class Meta:
         abstract = True
 
-    address = models.CharField(u'Адрес', max_length = 256)
+    address = models.CharField(u'Адрес', max_length = 256, blank = True)
 
     x = models.FloatField(default = 43.95)
     y = models.FloatField(default = 56.30)
@@ -128,7 +128,7 @@ class Area(BaseArea):
         return reverse_lazy('area-edit', kwargs = { 'folder_id': self.folder.id, 'number': self.number })
 
     def formatted_number(self):
-        return u'{}–{}'.format(self.folder.prefix, self.number)
+        return u'{}–{:02}'.format(self.folder.prefix, self.number)
 
     def archive(self):
         ArchivedArea.create_from(self).save()

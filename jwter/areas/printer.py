@@ -92,7 +92,7 @@ def build_map_url(x, y, zoom, marks):
         y = y,
         z = zoom,
         w = 650,
-        h = 284,
+        h = 450,
         pl = '&pl=' + polyline_arg if polyline_arg else ''
     )
     return ''.join(('http://', url_domain, url_path))
@@ -128,62 +128,73 @@ BLANK_WIDTH  = 146*mm
 BLANK_HEIGHT =  94*mm
 
 
-def print_area_blank(c, x, y, area, map_image):
+def underlined_digit(digit):
+    return str(digit).encode() + u'\u0332'
+
+
+def print_area_blank(c, x, y, area, map_image, flat_number):
     c.saveState()
     c.translate(x, y)
 
-    c.setFont('FreeSerifBold', 15)
-    c.drawCentredString(BLANK_WIDTH / 2, BLANK_HEIGHT - 1*cm, u'Карта участка')
+    # c.setFont('FreeSerifBold', 15)
+    # c.drawCentredString(BLANK_WIDTH / 2, BLANK_HEIGHT - 1*cm, u'Карта участка')
 
 
     address_y = BLANK_HEIGHT - 1.7*cm
 
-    c.setFont('FreeSerifBold', 10)
-    c.drawString(1*cm, address_y, u'Местонахождение')
-    c.drawString(9.5*cm, address_y, u'Номер участка')
+    # c.setFont('FreeSerifBold', 10)
+    # c.drawString(1*cm, address_y, u'Местонахождение')
+    # c.drawString(9.5*cm, address_y, u'Номер участка')
 
-    c.setLineWidth(1)
-    c.setDash([0, 2])
-    c.setStrokeGray(0)
-    c.setLineCap(1)
-    c.line(4.2*cm, address_y, 9.3*cm, address_y)
-    c.line(12.2*cm, address_y, BLANK_WIDTH - cm, address_y)
-
-
-    style = getSampleStyleSheet()['BodyText']
-    style.fontName = 'FreeSerifBold'
-    style.fontSize = 7.5
-    style.leading = 8
-    style.alignment = TA_JUSTIFY
-    p = Paragraph(u'Храни, пожалуйста, эту карту в чехле. Не пачкай ее, не делай на ней пометок и не сгибай. Всякий раз, когда прорабатывается участок, сообщай, пожалуйста, об этом брату, ведущему картотеку территории собрания.', style)
-    p.wrap(BLANK_WIDTH - 2*cm, 3*cm)
-    p.drawOn(c, 1*cm, 1.1*cm)
+    # c.setLineWidth(1)
+    # c.setDash([0, 2])
+    # c.setStrokeGray(0)
+    # c.setLineCap(1)
+    # c.line(4.2*cm, address_y, 9.3*cm, address_y)
+    # c.line(12.2*cm, address_y, BLANK_WIDTH - cm, address_y)
 
 
-    c.setFont('FreeSerif', 8)
-    c.drawString(1*cm, 0.7*cm, u'S-12-U   6/72')
+    # style = getSampleStyleSheet()['BodyText']
+    # style.fontName = 'FreeSerifBold'
+    # style.fontSize = 7.5
+    # style.leading = 8
+    # style.alignment = TA_JUSTIFY
+    # p = Paragraph(u'Храни, пожалуйста, эту карту в чехле. Не пачкай ее, не делай на ней пометок и не сгибай. Всякий раз, когда прорабатывается участок, сообщай, пожалуйста, об этом брату, ведущему картотеку территории собрания.', style)
+    # p.wrap(BLANK_WIDTH - 2*cm, 3*cm)
+    # p.drawOn(c, 1*cm, 1.1*cm)
+
+
+    # c.setFont('FreeSerif', 8)
+    # c.drawString(1*cm, 0.7*cm, u'S-12-U   6/72')
 
 
 
-    c.setFont('FreeSerif', 12)
-    c.drawCentredString((12.25*cm+BLANK_WIDTH-cm)/2, address_y + 0.5*mm, area.formatted_number())
+    # c.setFont('FreeSerif', 12)
+    # c.drawCentredString((12.25*cm+BLANK_WIDTH-cm)/2, address_y + 0.5*mm, area.formatted_number())
 
-    c.setFont('FreeSerif', 12)
+    # c.setFont('FreeSerif', 12)
 
-    font_size = 13
-    while font_size >= 6:
-        text = c.beginText()
-        text.setTextOrigin(4.25*cm, address_y + 0.5*mm)
-        text.setFont('FreeSerif', font_size)
-        text.textOut(area.address)
-        if text.getX() < 9.3*cm:
-            break
-        font_size -= 1
+    # font_size = 13
+    # while font_size >= 6:
+    #     text = c.beginText()
+    #     text.setTextOrigin(4.25*cm, address_y + 0.5*mm)
+    #     text.setFont('FreeSerif', font_size)
+    #     text.textOut(area.address)
+    #     if text.getX() < 9.3*cm:
+    #         break
+    #     font_size -= 1
 
-    c.drawText(text)
+    # c.drawText(text)
 
 
-    c.drawImage(ImageReader(map_image), 1*cm, 2*cm, BLANK_WIDTH - 2*cm, BLANK_HEIGHT - 3.9*cm)
+    c.drawImage(ImageReader(map_image), 1*cm, 0.85*cm, 19*cm, 13.15*cm)
+
+    c.setFont('DejaVuSans', 12)
+    text_x = 1.1
+    text_y = 13.5
+    c.setFillGray(0.5)
+    c.drawString(text_x*cm, text_y*cm, area.formatted_number() + underlined_digit(flat_number))
+    c.drawString((text_x + 2.5)*cm, text_y*cm, area.address)
 
     c.restoreState()
 
@@ -239,28 +250,38 @@ def print_many_areas(areas):
         MapCache.save_map(url, png)
 
 
-    for page_no in xrange((len(areas) + 2) / 3):
-        page_set = areas[page_no*3 : (page_no+1)*3]
+    # for page_no in xrange((len(areas) + 2) / 3):
+    #     page_set = areas[page_no*3 : (page_no+1)*3]
 
-        c.setLineWidth(0.5)
-        c.setStrokeGray(0.5)
-        c.line(x, 0, x, A4[1])
-        c.line(x + BLANK_WIDTH, 0, x + BLANK_WIDTH, A4[1])
+    #     c.setLineWidth(0.5)
+    #     c.setStrokeGray(0.5)
+    #     c.line(x, 0, x, A4[1])
+    #     c.line(x + BLANK_WIDTH, 0, x + BLANK_WIDTH, A4[1])
 
-        c.line(0, y + 3*BLANK_HEIGHT, A4[0], y + 3*BLANK_HEIGHT)
+    #     c.line(0, y + 3*BLANK_HEIGHT, A4[0], y + 3*BLANK_HEIGHT)
 
-        print_area_blank(c, x, y + 2*BLANK_HEIGHT, areas[page_no*3 + 0], map_images[map_urls[page_no*3 + 0]])
-        c.line(0, y + 2*BLANK_HEIGHT, A4[0], y + 2*BLANK_HEIGHT)
+    #     print_area_blank(c, x, y + 2*BLANK_HEIGHT, areas[page_no*3 + 0], map_images[map_urls[page_no*3 + 0]])
+    #     c.line(0, y + 2*BLANK_HEIGHT, A4[0], y + 2*BLANK_HEIGHT)
 
-        if len(page_set) >= 2:
-            print_area_blank(c, x, y + BLANK_HEIGHT, areas[page_no*3 + 1], map_images[map_urls[page_no*3 + 1]])
-            c.line(0, y + BLANK_HEIGHT, A4[0], y + BLANK_HEIGHT)
+    #     if len(page_set) >= 2:
+    #         print_area_blank(c, x, y + BLANK_HEIGHT, areas[page_no*3 + 1], map_images[map_urls[page_no*3 + 1]])
+    #         c.line(0, y + BLANK_HEIGHT, A4[0], y + BLANK_HEIGHT)
 
-        if len(page_set) >= 3:
-            print_area_blank(c, x, y, areas[page_no*3 + 2], map_images[map_urls[page_no*3 + 2]])
-            c.line(0, y, A4[0], y)
+    #     if len(page_set) >= 3:
+    #         print_area_blank(c, x, y, areas[page_no*3 + 2], map_images[map_urls[page_no*3 + 2]])
+    #         c.line(0, y, A4[0], y)
 
-        c.showPage()
+    #     c.showPage()
+
+    for i, area in enumerate(areas):
+        for flat_no in xrange(0, 10, 2):
+            c.setLineWidth(0.5)
+            c.setStrokeGray(0.5)
+            c.line(0, 29.7*cm/2, 21*cm, 29.7*cm/2)
+
+            print_area_blank(c, 0, 29.7*cm/2, area, map_images[map_urls[i]], flat_no)
+            print_area_blank(c, 0, 0, area, map_images[map_urls[i]], flat_no+1)
+            c.showPage()
 
 
     return c.getpdfdata()

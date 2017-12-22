@@ -6,7 +6,11 @@
     <tbody>
     {% for area in area_list %}
         <tr>
-            <td>{{ area.formatted_number }}</td>
+            <td>
+                <a href="{{ area.get_absolute_url }}">
+                    {{ area.formatted_number }}
+                </a>
+            </td>
             <td>
                 {% comment %}
                     {% if archive and perms.areas.change_archivedarea or not archive and perms.areas.change_area %}

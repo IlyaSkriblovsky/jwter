@@ -63,14 +63,17 @@
         </div>
 
         <div class="form-group{% if form.address.errors %} has-error{% endif %}">
-            <label class="col-md-2 col-lg-2 control-label">Адрес</label>
+            <label class="col-md-2 col-lg-2 control-label">Текст</label>
             <div class="col-md-8 col-lg-7">
+                <input type="text" class="form-control" name="address" id="id_address" value="{{ form.address.value|default_if_none:"" }}"/>
+                <!--
                 <div class="input-group">
                     <input type="text" class="form-control" placeholder="Адрес" name="address" id="id_address" value="{{ form.address.value|default_if_none:"" }}"/>
                     <div class="input-group-btn">
                         <button class="btn btn-default search-button"><i class="glyphicon glyphicon-search"></i></button>
                     </div>
                 </div>
+                -->
             {% for error in form.address.errors %}
                 <span class="help-block">{{ error }}</span>
             {% endfor %}

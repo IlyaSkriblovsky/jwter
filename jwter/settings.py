@@ -8,6 +8,8 @@ def here(filename):
 PDF_FONTS = {
     'FreeSerif': here('areas/fonts/FreeSerif.ttf'),
     'FreeSerifBold': here('areas/fonts/FreeSerifBold.ttf'),
+    'DejaVuSansMono': here('areas/fonts/DejaVuSansMono.ttf'),
+    'DejaVuSans': here('areas/fonts/DejaVuSans.ttf'),
 }
 
 
